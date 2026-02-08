@@ -1,5 +1,4 @@
 #if ANDROID
-using Android.Runtime;
 using Android.Webkit;
 using Java.Interop;
 using Microsoft.Maui.Handlers;
@@ -14,7 +13,7 @@ public class DebugWebViewHandler : WebViewHandler
 {
     JsBridge? _bridge;
 
-    protected override void ConnectHandler(Android.Webkit.WebView platformView)
+    protected override void ConnectHandler(WebView platformView)
     {
         base.ConnectHandler(platformView);
 
@@ -22,14 +21,14 @@ public class DebugWebViewHandler : WebViewHandler
         platformView.Settings.DomStorageEnabled = true;
 
 #if DEBUG
-        Android.Webkit.WebView.SetWebContentsDebuggingEnabled(true);
+        WebView.SetWebContentsDebuggingEnabled(true);
 #endif
 
         _bridge = new JsBridge(this);
         platformView.AddJavascriptInterface(_bridge, "mauiBridge");
     }
 
-    protected override void DisconnectHandler(Android.Webkit.WebView platformView)
+    protected override void DisconnectHandler(WebView platformView)
     {
         try
         {
