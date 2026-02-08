@@ -15,18 +15,17 @@ jobs:
     - name: Configurar .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        # Forçamos a versão exata do .NET 8 para evitar conflitos com o .NET 9/10
         dotnet-version: '8.0.x'
 
     - name: Instalar MAUI Workload
-      # Adicionamos a flag para ignorar avisos de suporte e focar no build
       run: dotnet workload install android --ignore-failed-sources
 
     - name: Restaurar Dependências
-      run: dotnet restore
+      # Adicionada a flag para ignorar o erro de fim de suporte durante a restauração
+      run: dotnet restore /p:CheckEolTargetFramework=false
 
     - name: Gerar APK (Build)
-      # Adicionamos a flag -p:CheckEolTargetFramework=false para ignorar o erro NETSDK1202
+      # Adicionada a flag para ignorar o erro de fim de suporte durante o build
       run: dotnet build -c Release -f net8.0-android /p:AndroidPackageFormat=apk /p:AndroidManagedSymbols=false /p:CheckEolTargetFramework=false
 
     - name: Disponibilizar APK para Download
@@ -34,5 +33,7 @@ jobs:
       with:
         name: meu-aplicativo-maui
         path: |
+          bin/Release/net8.0-android/*-Signed.apk
+          bin/Release/net8.0-android/*.apk
           bin/Release/net8.0-android/*-Signed.apk
           bin/Release/net8.0-android/*.apk
