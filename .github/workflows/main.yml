@@ -3,38 +3,62 @@ name: Build MAUI APK
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout do Código
-      uses: actions/checkout@v4
+      - name: Checkout do Código
+        uses: actions/checkout@v4
 
-    - name: Criar global.json (Forçar .NET 8)
-      # Este passo é CRUCIAL: ele trava a versão do SDK para evitar o erro do .NET 10
-      run: dotnet new globaljson --sdk-version 8.0.200 --force
+      - name: Criar global.json (Forçar .NET 8)
+        run: dotnet new globaljson --sdk-version 8.0.200 --force
 
-    - name: Configurar .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.200'
+      - name: Configurar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.200
 
-    - name: Instalar MAUI Workload
-      run: dotnet workload install android
+      - name: Configurar Java (necessário pro Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
-    - name: Restaurar Dependências
-      run: dotnet restore
+      - name: Instalar MAUI Workload
+        run: dotnet workload install maui --ignore-failed-sources
 
-    - name: Gerar APK (Build)
-      # Adicionamos propriedades extras para ignorar validações estritas
-      run: dotnet build -c Release -f net8.0-android /p:AndroidPackageFormat=apk /p:AndroidManagedSymbols=false /p:CheckEolTargetFramework=false /p:TreatWarningsAsErrors=false
+      - name: Restaurar Dependências
+        run: dotnet restore
 
-    - name: Disponibilizar APK para Download
-      uses: actions/upload-artifact@v4
-      with:
-        name: meu-aplicativo-maui
-        path: |
-          bin/Release/net8.0-android/*-Signed.apk
-          bin/Release/net8.0-android/*.apk
+      - name: Build APK (Release)
+        run: dotnet build -c Release -f net8.0-android `
+          /p:AndroidPackageFormat=apk `
+          /p:AndroidManagedSymbols=false `
+          /p:CheckEolTargetFramework=false `
+          /p:TreatWarningsAsErrors=false
+
+      # Opcional: produzir APK via publish (às vezes gera saída mais “limpa”)
+      # - name: Publish APK (Release)
+      #   run: dotnet publish -c Release -f net8.0-android `
+      #     /p:AndroidPackageFormat=apk `
+      #     /p:AndroidManagedSymbols=false `
+      #     /p:CheckEolTargetFramework=false `
+      #     /p:TreatWarningsAsErrors=false
+
+      - name: Listar APKs gerados (debug)
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter *.apk | Select-Object FullName, Length
+
+      - name: Disponibilizar APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: meu-aplicativo-maui-apk
+          path: |
+            **\bin\Release\net8.0-android\*.apk
+            **\bin\Release\net8.0-android\**\*.apk
+            **\*\bin\Release\net8.0-android\*.apk
+            **\*\bin\Release\net8.0-android\**\*.apk
