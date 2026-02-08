@@ -2,30 +2,32 @@ name: Build MAUI APK
 
 on:
   push:
-    branches: [ "main" ]  # O APK será gerado toda vez que você der 'git push'
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: windows-latest  # Usamos Windows porque é mais estável para build Android no MAUI
+    runs-on: windows-latest
 
     steps:
     - name: Checkout do Código
       uses: actions/checkout@v4
 
-    - name: Configurar .NET 8
+    - name: Configurar .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        # Forçamos a versão exata do .NET 8 para evitar conflitos com o .NET 9/10
+        dotnet-version: '8.0.x'
 
     - name: Instalar MAUI Workload
-      run: dotnet workload install android
+      # Adicionamos a flag para ignorar avisos de suporte e focar no build
+      run: dotnet workload install android --ignore-failed-sources
 
     - name: Restaurar Dependências
       run: dotnet restore
 
     - name: Gerar APK (Build)
-      # Este comando cria o APK sem precisar de assinatura digital complexa para teste
-      run: dotnet build -c Release -f net8.0-android /p:AndroidPackageFormat=apk /p:AndroidManagedSymbols=false
+      # Adicionamos a flag -p:CheckEolTargetFramework=false para ignorar o erro NETSDK1202
+      run: dotnet build -c Release -f net8.0-android /p:AndroidPackageFormat=apk /p:AndroidManagedSymbols=false /p:CheckEolTargetFramework=false
 
     - name: Disponibilizar APK para Download
       uses: actions/upload-artifact@v4
@@ -34,4 +36,3 @@ jobs:
         path: |
           bin/Release/net8.0-android/*-Signed.apk
           bin/Release/net8.0-android/*.apk
-          
