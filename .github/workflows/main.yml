@@ -1,0 +1,37 @@
+name: Build MAUI APK
+
+on:
+  push:
+    branches: [ "main" ]  # O APK será gerado toda vez que você der 'git push'
+
+jobs:
+  build:
+    runs-on: windows-latest  # Usamos Windows porque é mais estável para build Android no MAUI
+
+    steps:
+    - name: Checkout do Código
+      uses: actions/checkout@v4
+
+    - name: Configurar .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Instalar MAUI Workload
+      run: dotnet workload install android
+
+    - name: Restaurar Dependências
+      run: dotnet restore
+
+    - name: Gerar APK (Build)
+      # Este comando cria o APK sem precisar de assinatura digital complexa para teste
+      run: dotnet build -c Release -f net8.0-android /p:AndroidPackageFormat=apk /p:AndroidManagedSymbols=false
+
+    - name: Disponibilizar APK para Download
+      uses: actions/upload-artifact@v4
+      with:
+        name: meu-aplicativo-maui
+        path: |
+          bin/Release/net8.0-android/*-Signed.apk
+          bin/Release/net8.0-android/*.apk
+          
