@@ -1,0 +1,40 @@
+name: Build MAUI APK
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout do Código
+      uses: actions/checkout@v4
+
+    - name: Criar global.json (Forçar .NET 8)
+      # Este passo é CRUCIAL: ele trava a versão do SDK para evitar o erro do .NET 10
+      run: dotnet new globaljson --sdk-version 8.0.200 --force
+
+    - name: Configurar .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.200'
+
+    - name: Instalar MAUI Workload
+      run: dotnet workload install android
+
+    - name: Restaurar Dependências
+      run: dotnet restore
+
+    - name: Gerar APK (Build)
+      # Adicionamos propriedades extras para ignorar validações estritas
+      run: dotnet build -c Release -f net8.0-android /p:AndroidPackageFormat=apk /p:AndroidManagedSymbols=false /p:CheckEolTargetFramework=false /p:TreatWarningsAsErrors=false
+
+    - name: Disponibilizar APK para Download
+      uses: actions/upload-artifact@v4
+      with:
+        name: meu-aplicativo-maui
+        path: |
+          bin/Release/net8.0-android/*-Signed.apk
+          bin/Release/net8.0-android/*.apk
