@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:WebDebugPanel"
+             x:Class="WebDebugPanel.MainPage"
+             Title="Web Debug Panel">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Barra superior -->
+        <Grid ColumnDefinitions="*,Auto,Auto" Padding="10" Row="0" ColumnSpacing="8">
+            <Entry x:Name="UrlEntry"
+                   Placeholder="Cole a URL (https://...)"
+                   Keyboard="Url"
+                   Text="https://example.com" />
+            <Button Text="Carregar" Clicked="OnLoadClicked" Grid.Column="1" />
+            <Button Text="Limpar" Clicked="OnClearClicked" Grid.Column="2" />
+        </Grid>
+
+        <!-- Página -->
+        <local:DebugWebView x:Name="Browser"
+                            Grid.Row="1"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+
+        <!-- Painel inferior (logs) -->
+        <Border x:Name="BottomPanel"
+                Grid.Row="2"
+                BackgroundColor="{AppThemeBinding Light=#F4F4F4, Dark=#1F1F1F}"
+                StrokeThickness="1"
+                Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#333333}">
+            <Grid RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,Auto,Auto" Padding="10" ColumnSpacing="8">
+                    <Label Text="Dev Tools (Console)"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                    <Button Text="Recolher/Expandir"
+                            Grid.Column="1"
+                            Clicked="OnTogglePanelClicked" />
+                    <Button Text="Injetar Hook"
+                            Grid.Column="2"
+                            Clicked="OnInjectClicked" />
+                </Grid>
+
+                <CollectionView Grid.Row="1"
+                                x:Name="LogsView"
+                                ItemsSource="{Binding Logs}"
+                                SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10" ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto">
+                                <Label Text="{Binding Time, StringFormat='{0:HH:mm:ss}'}"
+                                       FontSize="12"
+                                       Opacity="0.8" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Type}"
+                                       FontSize="12"
+                                       Margin="10,0,0,0"
+                                       Opacity="0.9" />
+                                <Label Grid.Column="2"
+                                       Text="{Binding Message}"
+                                       FontSize="13"
+                                       LineBreakMode="WordWrap"
+                                       Margin="10,0,0,0" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+    </Grid>
+
+</ContentPage>
